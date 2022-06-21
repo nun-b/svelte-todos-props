@@ -1,4 +1,4 @@
-# TSvelte.
+# Svelte.
 
 ---
 

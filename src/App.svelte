@@ -1,30 +1,109 @@
 <script>
-	export let name;
-</script>
+	import TodoHeader from './components/TodoHeader.svelte';
+	import TodoInfo from './components/TodoInfo.svelte';
+	import TodoList from './components/TodoList.svelte';
+	import Constant from './constant';
 
-<main>
-	<h1>Hello {name}!</h1>
-	<p>Visit the <a href="https://svelte.dev/tutorial">Svelte tutorial</a> to learn how to build Svelte apps.</p>
-</main>
+	import { v4 as uuid } from 'uuid';
 
-<style>
-	main {
-		text-align: center;
-		padding: 1em;
-		max-width: 240px;
-		margin: 0 auto;
+	let todos = [
+		{
+			id: uuid(),
+			content: '첫 번째 할일',
+			done: false
+		},
+		{
+			id: uuid(),
+			content: '두 번째 할일',
+			done: false
+		},
+		{
+			id: uuid(),
+			content: '세 번째 할일',
+			done: true
+		},
+		{
+			id: uuid(),
+			content: '네 번째 할일',
+			done: false
+		}
+	]
+
+	let todoValue = '';
+	let editMode = '';
+	let viewMode = Constant.ALL;
+
+	$: todoCount = fetchTodos.length;
+
+	$: fetchTodos = todos;
+
+	$: {
+		if(viewMode === Constant.ALL) fetchTodos = todos;
+		if(viewMode === Constant.ACTIVE) fetchTodos = todos.filter(todo => todo.done === false);
+		if(viewMode === Constant.DONE) fetchTodos = todos.filter(todo => todo.done === true);
 	}
 
-	h1 {
-		color: #ff3e00;
-		text-transform: uppercase;
-		font-size: 4em;
-		font-weight: 100;
+	function handleCheckTodo(id) {
+		todos = todos.map(todo => {
+			if(todo.id === id) {
+				todo.done = !todo.done;
+			}
+			return todo;
+		})
 	}
 
-	@media (min-width: 640px) {
-		main {
-			max-width: none;
+	function addTodoItem() {
+		if(todoValue) {
+			const newTodo = {
+				id: uuid(),
+				content: todoValue,
+				doen: false,
+			}
+
+			todos = [...todos, newTodo];
+			todoValue = '';
 		}
 	}
-</style>
+
+	function handleTodoInputKeyup(e) {
+		if(e.keyCode === 13) {
+			// todoValue = e.target.value;
+			addTodoItem();
+		}
+	}
+
+	function handleRemoveTodo(id) {
+		todos = todos.filter(todo => todo.id !== id);
+	}
+
+	function handleChangeEditMode(id) {
+		editMode = id;
+	}
+
+	function handleEditTodoItem(editTodo) {
+		todos = todos.map(todo => {
+			if(todo.id === editTodo.id) {
+				todo.content = editTodo.content;
+			}
+			return todo;
+		});
+
+		closeEditMode();
+	}
+
+	function closeEditMode() {
+		editMode = '';
+	}
+
+	function handleChangeViewMode(mode) {
+		viewMode = mode;
+	}
+
+</script>
+
+<div class="app">
+	<TodoHeader bind:todoValue={todoValue} {handleTodoInputKeyup} />
+	<!-- <TodoHeader {handleTodoInputKeyup} /> -->
+	<TodoInfo {todoCount} {viewMode} {handleChangeViewMode}/>
+	<TodoList {fetchTodos} {handleCheckTodo} {handleRemoveTodo} {editMode} {handleChangeEditMode} {handleEditTodoItem} />
+</div>
